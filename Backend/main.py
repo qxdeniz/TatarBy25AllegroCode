@@ -11,6 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import os
 import base64
+from models import *
+import re
+import requests
 
 
 app = FastAPI()
@@ -53,17 +56,6 @@ class User(Base):
 Base.metadata.create_all(bind=engine)
 
 
-class UserCreate(BaseModel):
-    password: str
-    email: EmailStr   
-    name: str
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class GPTRequest(BaseModel):
-    prompt: str
 
 def get_db():
     db = SessionLocal()
@@ -150,3 +142,30 @@ def test_connection(db: Session = Depends(get_db)):
 
     user_count = db.query(User).count()
     return {"msg": "Connection successful", "users_count": user_count}
+
+
+app.post("/corrector/find_mistakes")
+def find_mistakes(request: CorrectorFRequest):
+    text = request.text
+
+    def find_mistakes(text):
+
+        payload = {
+            "spell": f'''<p class="p1" style="font-variant-numeric: normal; font-variant-east-asian: normal; font-variant-alternates: normal; font-size-adjust: none; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-variant-position: normal; font-variant-emoji: normal; font-stretch: normal; line-height: normal; margin: 0px;">
+        <font face="Helvetica Neue"><span style="font-size: 13px;">{text}</span></font></p>''',
+            "lang": "tt"
+        }
+
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+
+        response = requests.post("https://grammar.corpus.tatar/search/spellcheck.php", data=payload, headers=headers)
+
+
+        words = re.findall(r"<span class='spelltip'[^>]*>(.*?)</span>", response.json()['text'])
+        words = [re.sub(r"<.*?>", "", w) for w in words]
+        return words
+   
+    mistakes = find_mistakes(text)
+    return {"mistakes": mistakes}
