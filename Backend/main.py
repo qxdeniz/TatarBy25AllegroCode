@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import jwt as pyjwt 
@@ -58,6 +59,14 @@ class ChatHistory(Base):
     user_id = Column(Integer, nullable=False)
     history = Column(JSON, nullable=False, default=[])
 
+
+class Agents(Base):
+    __tablename__ = "agents"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    system_prompt = Column(Text, nullable=True)
+    knowledge = Column(Text, nullable=True)
+    author_id = Column(Integer, nullable=False)
 
 
 
@@ -176,7 +185,7 @@ def chat_request(message: GPTRequest, current_user: User = Depends(get_current_u
         raise HTTPException(status_code=500, detail="Failed to save chat history")
 
     payload_for_gpt = json.dumps(chat.history, ensure_ascii=False)
-    generator = TextGenerator(payload_for_gpt)
+    generator = TextGenerator(payload_for_gpt, message.model)
     response = generator.create_tatar_text()
 
     assistant_entry = {
@@ -223,4 +232,57 @@ def find_mistakes(request: CorrectorFRequest):
    
     mistakes = find_mistakes(text)
     return {"mistakes": mistakes}
+
+# Pydantic model for creating agents (ensure it's available)
+class AgentCreate(BaseModel):
+    name: str
+    system_prompt: Optional[str] = None
+    knowledge: Optional[str] = None
+
+
+@app.post("/create_agent")
+def create_agent(agent: AgentCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if not agent.name or not agent.name.strip():
+        raise HTTPException(status_code=422, detail="Agent name is required")
+    new_agent = Agents(
+        name=agent.name.strip(),
+        system_prompt=agent.system_prompt or "",
+        knowledge=agent.knowledge or "",
+        author_id=current_user.id
+    )
+    try:
+        db.add(new_agent)
+        db.commit()
+        db.refresh(new_agent)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to create agent")
+    return {
+        "id": new_agent.id,
+        "name": new_agent.name,
+        "system_prompt": new_agent.system_prompt,
+        "knowledge": new_agent.knowledge,
+        "author_id": new_agent.author_id
+    }
+
+@app.post("/agents/{agent_name}/chat")
+def agent_chat(agent_name: str, message: GPTRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    agent = db.query(Agents).filter(Agents.name == agent_name).first()
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    
+    messages = [
+        {"role": "user", "content": message.prompt, "timestamp": datetime.datetime.utcnow().isoformat()}
+    ]
+    if agent.system_prompt:
+        messages.append({"role": "system", "content": agent.system_prompt, "timestamp": datetime.datetime.utcnow().isoformat()})
+    if agent.knowledge:
+        messages.append({"role": "system", "content": agent.knowledge, "timestamp": datetime.datetime.utcnow().isoformat()})
+
+    payload_for_gpt = json.dumps(messages, ensure_ascii=False)
+    generator = TextGenerator(payload_for_gpt, message.model)
+    response = generator.create_tatar_text()
+
+    return {"response": response, "agent": agent.name}
+
 

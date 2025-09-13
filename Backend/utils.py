@@ -32,14 +32,40 @@ def translate_text(api_key, folder_id, text, source_language="ru", target_langua
 
 
 def generate_content(api_key, text_input):
-    client = genai.Client(api_key=api_key)
+    try:
+        client = genai.Client(api_key="AIzaSyDtZAT116i-LPhhtJ5Zm2gXbZsnOyNjRu8")
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=text_input
+        )
+        answer = response.text
+    except Exception as e:
+        URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+        headers = {
+            "x-goog-api-key": "AIzaSyDtZAT116i-LPhhtJ5Zm2gXbZsnOyNjRu8",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": text_input
+                        }
+                    ]
+                }
+            ]
+        }
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=text_input
-    )
+        response = requests.post(URL, headers=headers, json=payload)
+        if response.status_code == 200:
+            data = response.json()
+            print(data)
+            answer = data['candidates'][0]['content']['parts'][0]['text']
+        else:
+            print(f"Error: {response.status_code}, {response.text}")
 
-    return response.text
+    return answer
 
 
 def ask_yandex_gpt(prompt):
@@ -47,7 +73,7 @@ def ask_yandex_gpt(prompt):
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Api-Key {API_KEY_YANDEX}"
+        "Authorization": f"Api-Key AQVN1439cSbZ3zvfEBeKusU4CPtgTVpvxMa5BOQb"
     }
 
     messages = [
@@ -108,13 +134,15 @@ class TextGenerator:
           tt2ru = translate_text(API_KEY_YANDEX, folder_id, self.text, source_language="tt", target_language="ru")
           if self.model == 'yandex':
               model_answer = ask_yandex_gpt(tt2ru)
+              print('f')
           else:  
             model_answer = generate_content(API_KEY_GEMINI, tt2ru)
         
           ru2tt = translate_text(API_KEY_YANDEX, folder_id, model_answer, source_language="ru", target_language="tt")
+          print(ru2tt)
           mistakes, inds = find_mistakes(ru2tt)
           if mistakes:
-             ru2tt = generate_content(API_KEY_GEMINI, f"Исправь неправильно написанные слова на татарском в этом тексте на татарском: {ru2tt}. Слова с ошибками: {', '.join(mistakes)}")
+             ru2tt = generate_content(f"Исправь неправильно написанные слова на татарском в этом тексте на татарском: {ru2tt}. Слова с ошибками: {', '.join(mistakes)}")
 
           return {"text": ru2tt}
 

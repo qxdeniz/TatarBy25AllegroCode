@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-
+from typing import Optional
 
 class UserCreate(BaseModel):
     password: str
@@ -12,6 +12,14 @@ class UserLogin(BaseModel):
 
 class GPTRequest(BaseModel):
     prompt: str
+    model: str
 
 class CorrectorFRequest(BaseModel):
     text: str
+
+
+
+class AgentCreate(BaseModel):
+    name: str
+    system_prompt: Optional[str] = None
+    knowledge: Optional[str] = None
