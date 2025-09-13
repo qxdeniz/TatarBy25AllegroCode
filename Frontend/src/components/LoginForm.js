@@ -23,11 +23,11 @@ const LoginForm = ({ onSwitchToRegister }) => {
     setError('');
 
     try {
-      const response = await axios.post('/api/auth/login', formData);
+      const response = await axios.post('/login', formData);
       console.log('Успешный вход:', response.data);
       // Здесь можно добавить логику сохранения токена и перенаправления
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при входе в систему');
+      setError(err.response?.data?.detail || err.response?.data?.message || 'Ошибка при входе в систему');
     } finally {
       setLoading(false);
     }

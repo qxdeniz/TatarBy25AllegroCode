@@ -3,7 +3,7 @@ import axios from 'axios';
 
 const RegisterForm = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
-    username: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -39,11 +39,11 @@ const RegisterForm = ({ onSwitchToLogin }) => {
 
     try {
       const { confirmPassword, ...registerData } = formData;
-      const response = await axios.post('/api/auth/register', registerData);
+      const response = await axios.post('/signup', registerData);
       console.log('Успешная регистрация:', response.data);
       // Здесь можно добавить логику перенаправления или показа сообщения об успехе
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при регистрации');
+      setError(err.response?.data?.detail || err.response?.data?.message || 'Ошибка при регистрации');
     } finally {
       setLoading(false);
     }
@@ -54,18 +54,18 @@ const RegisterForm = ({ onSwitchToLogin }) => {
       <h2 className="form-title">Регистрация</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="username" className="form-label">
-            Имя пользователя
+          <label htmlFor="name" className="form-label">
+            Имя
           </label>
           <input
             type="text"
-            id="username"
-            name="username"
-            value={formData.username}
+            id="name"
+            name="name"
+            value={formData.name}
             onChange={handleChange}
             className="form-input"
             required
-            placeholder="Введите имя пользователя"
+            placeholder="Введите ваше имя"
           />
         </div>
 
