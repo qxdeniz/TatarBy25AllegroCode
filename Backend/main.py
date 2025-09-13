@@ -29,13 +29,11 @@ app.add_middleware(
 )
 
 
-DATABASE_URL = "mysql+mysqlconnector://user:password@db:3306/allegrocode" 
+DATABASE_URL = "mysql+mysqlconnector://user:password@db:3306/tatarby" 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-
-Base.metadata.create_all(bind=engine)
 
 
 SECRET_KEY = "key" 
