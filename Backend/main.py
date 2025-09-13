@@ -28,12 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-DATABASE_URL = "mysql+mysqlconnector://user:password@db:3306/tatarby" 
+DATABASE_URL = "mysql+mysqlconnector://user:password@db:3306/allegrocode" 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
 
 
 SECRET_KEY = "key" 
