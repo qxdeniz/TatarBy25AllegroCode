@@ -1,0 +1,176 @@
+/* Цветовая палитра */
+:root {
+  --bright-cyan: #00BFFF;      /* Яркий голубой/небесно-голубой */
+  --pure-white: #FFFFFF;       /* Чистый белый */
+  --deep-navy: #1B2951;        /* Глубокий темно-синий */
+  --royal-blue: #4169E1;       /* Королевский синий */
+  --sage-green: #9CAF88;       /* Приглушенный шалфейно-зеленый */
+  
+  /* Дополнительные цвета для градиентов и оттенков */
+  --light-cyan: #87CEEB;
+  --dark-sage: #7A9A6B;
+  --light-navy: #2C3E50;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, var(--bright-cyan) 0%, var(--royal-blue) 100%);
+  min-height: 100vh;
+  color: var(--deep-navy);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Основные стили для контейнеров */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Стили для форм */
+.form-container {
+  background: var(--pure-white);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(27, 41, 81, 0.1);
+  padding: 40px;
+  max-width: 400px;
+  width: 100%;
+  margin: 50px auto;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-title {
+  text-align: center;
+  color: var(--deep-navy);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+  background: linear-gradient(45deg, var(--bright-cyan), var(--royal-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--deep-navy);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #E5E7EB;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: var(--pure-white);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--bright-cyan);
+  box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.1);
+}
+
+.form-button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(45deg, var(--bright-cyan), var(--royal-blue));
+  color: var(--pure-white);
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.form-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 191, 255, 0.3);
+}
+
+.form-button:active {
+  transform: translateY(0);
+}
+
+.form-link {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.form-link a {
+  color: var(--royal-blue);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.form-link a:hover {
+  color: var(--bright-cyan);
+}
+
+/* Стили для переключателя между формами */
+.auth-switch {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.auth-switch button {
+  background: none;
+  border: none;
+  color: var(--sage-green);
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.auth-switch button:hover {
+  color: var(--dark-sage);
+}
+
+/* Стили для ошибок */
+.error-message {
+  color: #EF4444;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
+}
+
+/* Адаптивность */
+@media (max-width: 480px) {
+  .form-container {
+    margin: 20px;
+    padding: 30px 20px;
+  }
+  
+  .form-title {
+    font-size: 1.5rem;
+  }
+}
