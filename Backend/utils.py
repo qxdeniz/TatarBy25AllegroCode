@@ -3,7 +3,7 @@ from google import genai
 import re
 import os
 
-folder_id = "b1gu835v82q677s36ekg"
+folder_id = os.getenv("YANDEX_FOLDER_ID")
 target_language = "tt"
 source_language = "ru"
 
