@@ -3,10 +3,6 @@ from google import genai
 import re
 import os
 
-
-API_KEY_GEMINI = os.getenv("API_KEY_GEMINI")
-API_KEY_YANDEX = os.getenv("API_KEY_YANDEX")
-
 folder_id = "b1gu835v82q677s36ekg"
 target_language = "tt"
 source_language = "ru"
@@ -31,41 +27,33 @@ def translate_text(api_key, folder_id, text, source_language="ru", target_langua
         return f"Ошибка: {response.status_code}\n{response.text}"
 
 
-def generate_content(api_key, text_input):
-    try:
-        client = genai.Client(api_key="AIzaSyDtZAT116i-LPhhtJ5Zm2gXbZsnOyNjRu8")
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=text_input
-        )
-        answer = response.text
-    except Exception as e:
-        URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-        headers = {
-            "x-goog-api-key": "AIzaSyDtZAT116i-LPhhtJ5Zm2gXbZsnOyNjRu8",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": text_input
-                        }
-                    ]
-                }
-            ]
-        }
+def generate_content(text_input):
+     URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
-        response = requests.post(URL, headers=headers, json=payload)
-        if response.status_code == 200:
-            data = response.json()
-            print(data)
-            answer = data['candidates'][0]['content']['parts'][0]['text']
-        else:
-            print(f"Error: {response.status_code}, {response.text}")
+     headers = {
+        "x-goog-api-key": "AIzaSyAx-9gxZXrQWP4rImAYAxNehvwiC1pXHnA",
+        "Content-Type": "application/json"
+    }
 
-    return answer
+     payload = {
+        "contents": [
+            {
+                "parts": [
+                    {
+                        "text": text_input
+                    }
+                ]
+            }
+        ]
+     }
+
+     response = requests.post(URL, headers=headers, json=payload, timeout=30)
+     if response.status_code == 200:
+        data = response.json()
+        answer = data['candidates'][0]['content']['parts'][0]['text']
+        return answer
+     else:
+         print(response.json())
 
 
 def ask_yandex_gpt(prompt):
@@ -131,20 +119,23 @@ class TextGenerator:
         self.model = model
 
      def create_tatar_text(self):
-          tt2ru = translate_text(API_KEY_YANDEX, folder_id, self.text, source_language="tt", target_language="ru")
-          if self.model == 'yandex':
-              model_answer = ask_yandex_gpt(tt2ru)
-              print('f')
-          else:  
-            model_answer = generate_content(API_KEY_GEMINI, tt2ru)
+        text = generate_content(self.text)
+        return {"text": text} 
         
-          ru2tt = translate_text(API_KEY_YANDEX, folder_id, model_answer, source_language="ru", target_language="tt")
-          print(ru2tt)
-          mistakes, inds = find_mistakes(ru2tt)
-          if mistakes:
-             ru2tt = generate_content(f"Исправь неправильно написанные слова на татарском в этом тексте на татарском: {ru2tt}. Слова с ошибками: {', '.join(mistakes)}")
+        #   tt2ru = translate_text(API_KEY_YANDEX, folder_id, self.text, source_language="tt", target_language="ru")
+        #   if self.model == 'yandex':
+        #       model_answer = ask_yandex_gpt(tt2ru)
+        #       print('f')
+        #   else:  
+        #     model_answer = generate_content(API_KEY_GEMINI, tt2ru)
+        
+        #   ru2tt = translate_text(API_KEY_YANDEX, folder_id, model_answer, source_language="ru", target_language="tt")
+        #   print(ru2tt)
+        #   mistakes, inds = find_mistakes(ru2tt)
+        #   if mistakes:
+        #      ru2tt = generate_content(f"Исправь неправильно написанные слова на татарском в этом тексте на татарском: {ru2tt}. Слова с ошибками: {', '.join(mistakes)}")
 
-          return {"text": ru2tt}
+        #   return {"text": ru2tt}
 
                
             

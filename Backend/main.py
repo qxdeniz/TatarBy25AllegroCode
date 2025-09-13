@@ -233,12 +233,6 @@ def find_mistakes(request: CorrectorFRequest):
     mistakes = find_mistakes(text)
     return {"mistakes": mistakes}
 
-# Pydantic model for creating agents (ensure it's available)
-class AgentCreate(BaseModel):
-    name: str
-    system_prompt: Optional[str] = None
-    knowledge: Optional[str] = None
-
 
 @app.post("/create_agent")
 def create_agent(agent: AgentCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -286,3 +280,4 @@ def agent_chat(agent_name: str, message: GPTRequest, current_user: User = Depend
     return {"response": response, "agent": agent.name}
 
 
+@app.post()
