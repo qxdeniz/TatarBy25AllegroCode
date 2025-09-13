@@ -24,8 +24,13 @@ services:
     volumes:
       - ./backend:/app
     working_dir: /app
+    env_file:
+      - .env
     environment:
       - DATABASE_URL=mysql://user:password@db/allegrocode
+      - YANDEX_FOLDER_ID=${YANDEX_FOLDER_ID}
+      - API_KEY_YANDEX=${API_KEY_YANDEX}
+      - API_KEY_GEMINI=${API_KEY_GEMINI}
     depends_on:
       - db
     restart: unless-stopped

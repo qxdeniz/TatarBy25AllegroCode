@@ -2,6 +2,8 @@ import requests
 from google import genai
 import re
 import os
+from base import *
+
 
 folder_id = os.getenv("YANDEX_FOLDER_ID")
 target_language = "tt"
@@ -58,10 +60,12 @@ def generate_content(text_input):
 
 def ask_yandex_gpt(prompt):
     url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+    key = os.getenv("API_KEY_YANDEX")
+    print(key)
 
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Api-Key AQVN1439cSbZ3zvfEBeKusU4CPtgTVpvxMa5BOQb"
+        "Authorization": f"Api-Key {key}"
     }
 
     messages = [
@@ -70,7 +74,7 @@ def ask_yandex_gpt(prompt):
     ]
 
     data = {
-        "modelUri": f"gpt://b1gu835v82q677s36ekg/yandexgpt-lite",  
+        "modelUri": f"gpt://b1gu835v82q677s36ekg/yandexgpt",  
         "completionOptions": {
             "stream": False,
             "temperature": 0.6,
@@ -124,15 +128,15 @@ class TextGenerator:
 
            text = ask_yandex_gpt(self.text)
          #  print("Ответ модели:", text)
-           text = translate_text(os.getenv("API_KEY_YANDEX"), folder_id, text, source_language="ru", target_language="tt")
+         #  text = translate_text(os.getenv("API_KEY_YANDEX"), folder_id, text, source_language="ru", target_language="tt")
          #  print(f"Перевод: {text}")
         else:
            # text = translate_text(, folder_id, self.text, source_language="tt", target_language="ru")
             text = generate_content(self.text)
            # text = translate_text(, folder_id, text, source_language="ru", target_language="tt")
-        mistakes, inds = find_mistakes(ru2tt)
+        mistakes, inds = find_mistakes(text)
         if mistakes:
-            ru2tt = generate_content(f"Исправь неправильно написанные слова на татарском в этом тексте на татарском: {ru2tt}. Слова с ошибками: {', '.join(mistakes)}. Верни ТОЛЬКО САМ текст на татарском")
+            ru2tt = generate_content(f"Исправь неправильно написанные слова на татарском в этом тексте на татарском: {text}. Слова с ошибками: {', '.join(mistakes)}. Верни ТОЛЬКО САМ текст на татарском")
         
         return {"text": text} 
         
@@ -145,7 +149,7 @@ class Corrector:
             
         def corrector(self):
           text = self.text
-          #tt2ru = translate_text(, folder_id, self.text, source_language="tt", target_language="ru")
+          text = translate_text(os.getenv(""), folder_id, self.text, source_language="tt", target_language="ru")
           if self.model == 'yandex':
               model_answer = ask_yandex_gpt(text)
           else:  
@@ -161,3 +165,13 @@ class Corrector:
 
                
             
+class JorneyGeneraor:
+    def __init__(self, prompt, type):
+        self.prompt = prompt
+        self.type = type
+
+    def generate_jorney(self):
+        if self.type == 'sci':
+            return sci
+        elif self.type == 'art':
+            return jorney

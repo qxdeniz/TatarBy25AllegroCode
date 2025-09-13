@@ -262,7 +262,7 @@ def create_agent(agent: AgentCreate, current_user: User = Depends(get_current_us
     }
 
 @app.post("/agents/{agent_name}/chat")
-def agent_chat(agent_name: str, message: GPTRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def agent_chat(agent_name: str, message: GPTRequest, db: Session = Depends(get_db)):
     agent = db.query(Agents).filter(Agents.name == agent_name).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
@@ -285,6 +285,20 @@ def agent_chat(agent_name: str, message: GPTRequest, current_user: User = Depend
 def agent_exists(agent_name: str, db: Session = Depends(get_db)):
     agent = db.query(Agents).filter(Agents.name == agent_name).first()
     return {"exists": bool(agent)}
+
+@app.post("agents/creators/journey")
+def create_jorney(req: JorneyRequest):
+    creator = JorneyGeneraor(req.prompt, "art")
+    jorney = creator.generate_jorney()
+    return {"base64_pdf": jorney}
+
+
+@app.post("agents/creators/sci")
+def create_jorney(req: JorneyRequest):
+    creator = JorneyGeneraor(req.prompt, "sci")
+    jorney = creator.generate_jorney()
+    return {"base64_pdf": jorney}
+
 
 autoposting_jobs = {} 
 

@@ -17,9 +17,11 @@ class GPTRequest(BaseModel):
 class CorrectorFRequest(BaseModel):
     text: str
 
-
-
 class AgentCreate(BaseModel):
     name: str
     system_prompt: Optional[str] = None
     knowledge: Optional[str] = None
+
+
+class JorneyRequest(BaseModel):
+    prompt: str
