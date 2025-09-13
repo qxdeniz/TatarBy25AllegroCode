@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const RegisterForm = ({ onSwitchToLogin }) => {
+const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -10,6 +11,7 @@ const RegisterForm = ({ onSwitchToLogin }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -41,7 +43,27 @@ const RegisterForm = ({ onSwitchToLogin }) => {
       const { confirmPassword, ...registerData } = formData;
       const response = await axios.post('/signup', registerData);
       console.log('Успешная регистрация:', response.data);
-      // Здесь можно добавить логику перенаправления или показа сообщения об успехе
+      
+      const token = response.data.access_token || response.data.token || response.data.accessToken;
+      if (token) {
+        localStorage.setItem('access_token', token);
+        // Попробуем получить userinfo
+        try {
+          const userResp = await axios.get('/userinfo', { headers: { Authorization: `Bearer ${token}` } });
+          if (userResp.data && userResp.data.name) {
+            localStorage.setItem('userName', userResp.data.name);
+          } else {
+            localStorage.setItem('userName', formData.name);
+          }
+        } catch (err) {
+          localStorage.setItem('userName', formData.name);
+        }
+      } else {
+        localStorage.setItem('userName', formData.name);
+      }
+      
+      onRegisterSuccess();
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.detail || err.response?.data?.message || 'Ошибка при регистрации');
     } finally {

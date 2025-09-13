@@ -17,6 +17,7 @@ import re
 import requests
 from utils import *
 import json
+from threading import Thread, Event
 
 
 app = FastAPI()
@@ -161,20 +162,21 @@ def test_connection(db: Session = Depends(get_db)):
 
 
 @app.post("/chat")
-def chat_request(message: GPTRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def chat_request(message: GPTRequest, db: Session = Depends(get_db)):
     user_entry = {
         "role": "user",
         "content": message.prompt,
         "timestamp": datetime.datetime.utcnow().isoformat()
     }
-    chat = db.query(ChatHistory).filter(ChatHistory.user_id == current_user.id).first()
+    user_id = 1
+    chat = db.query(ChatHistory).filter(ChatHistory.user_id == user_id).first()
     if chat:
         history = chat.history or []
         history.append(user_entry)
         chat.history = history
     else:
         history = [user_entry]
-        chat = ChatHistory(user_id=current_user.id, history=history)
+        chat = ChatHistory(user_id=user_id, history=history)
         db.add(chat)
 
     try:
@@ -185,7 +187,7 @@ def chat_request(message: GPTRequest, current_user: User = Depends(get_current_u
         raise HTTPException(status_code=500, detail="Failed to save chat history")
 
     payload_for_gpt = json.dumps(chat.history, ensure_ascii=False)
-    generator = TextGenerator(payload_for_gpt, message.model)
+    generator = TextGenerator(message.prompt, message.model)
     response = generator.create_tatar_text()
 
     assistant_entry = {
@@ -279,5 +281,55 @@ def agent_chat(agent_name: str, message: GPTRequest, current_user: User = Depend
 
     return {"response": response, "agent": agent.name}
 
+@app.get("/agents/{agent_name}/exists")
+def agent_exists(agent_name: str, db: Session = Depends(get_db)):
+    agent = db.query(Agents).filter(Agents.name == agent_name).first()
+    return {"exists": bool(agent)}
 
-@app.post()
+autoposting_jobs = {} 
+
+class AutoPostRequest(BaseModel):
+    tg_bot_token: str
+    channel_id: str
+    prompt_morning: str
+    prompt_midday: str
+    prompt_evening: str
+
+@app.post("/autoposting/start")
+def autoposting_start(request: AutoPostRequest):
+    channel_key = request.channel_id
+    existing = autoposting_jobs.get(channel_key)
+    if existing and existing["thread"].is_alive():
+        raise HTTPException(status_code=400, detail="Autoposting already running for this channel")
+
+    try:
+        import autoposting
+        try:
+            ch = int(request.channel_id)
+        except Exception:
+            ch = request.channel_id
+        thread, stop_event = autoposting.start_autoposting(
+            request.tg_bot_token, ch,
+            request.prompt_morning, request.prompt_midday, request.prompt_evening
+        )
+        autoposting_jobs[channel_key] = {"thread": thread, "stop_event": stop_event}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start autoposting: {e}")
+
+    return {"status": "started", "channel_id": channel_key}
+
+@app.post("/autoposting/stop")
+def autoposting_stop(body: dict):
+    channel_key = body.get("channel_id")
+    if not channel_key:
+        raise HTTPException(status_code=422, detail="channel_id is required")
+    job = autoposting_jobs.get(channel_key)
+    if not job:
+        raise HTTPException(status_code=404, detail="No autoposting job for this channel")
+    try:
+        job["stop_event"].set()
+        return {"status": "stopping", "channel_id": channel_key}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to stop autoposting: {e}")
+
+

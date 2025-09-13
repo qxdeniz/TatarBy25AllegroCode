@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const LoginForm = ({ onSwitchToRegister }) => {
+const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -25,7 +27,23 @@ const LoginForm = ({ onSwitchToRegister }) => {
     try {
       const response = await axios.post('/login', formData);
       console.log('Успешный вход:', response.data);
-      // Здесь можно добавить логику сохранения токена и перенаправления
+      
+      const token = response.data.access_token || response.data.token || response.data.accessToken;
+      if (token) {
+        localStorage.setItem('access_token', token);
+        // Получаем userinfo для имени
+        try {
+          const userResp = await axios.get('/userinfo', { headers: { Authorization: `Bearer ${token}` } });
+          if (userResp.data && userResp.data.name) {
+            localStorage.setItem('userName', userResp.data.name);
+          }
+        } catch (err) {
+          // ignore userinfo errors
+        }
+      }
+      
+      onLoginSuccess();
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.detail || err.response?.data?.message || 'Ошибка при входе в систему');
     } finally {
@@ -35,7 +53,7 @@ const LoginForm = ({ onSwitchToRegister }) => {
 
   return (
     <div className="form-container">
-      <h2 className="form-title">Вход в систему</h2>
+      <h2 className="form-title">Рәхим итегез</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="email" className="form-label">
@@ -49,7 +67,7 @@ const LoginForm = ({ onSwitchToRegister }) => {
             onChange={handleChange}
             className="form-input"
             required
-            placeholder="Введите ваш email"
+            placeholder="Email кертегез"
           />
         </div>
 
@@ -65,7 +83,7 @@ const LoginForm = ({ onSwitchToRegister }) => {
             onChange={handleChange}
             className="form-input"
             required
-            placeholder="Введите ваш пароль"
+            placeholder="Пароль кертегез"
           />
         </div>
 
@@ -76,13 +94,13 @@ const LoginForm = ({ onSwitchToRegister }) => {
           className="form-button"
           disabled={loading}
         >
-          {loading ? 'Вход...' : 'Войти'}
+          {loading ? 'Вход...' : 'Керү'}
         </button>
       </form>
 
       <div className="auth-switch">
         <button type="button" onClick={onSwitchToRegister}>
-          Нет аккаунта? Зарегистрироваться
+          Аккаунт юкмы? Теркәлү
         </button>
       </div>
     </div>

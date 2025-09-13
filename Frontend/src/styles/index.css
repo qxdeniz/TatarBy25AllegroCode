@@ -24,7 +24,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, var(--bright-cyan) 0%, var(--royal-blue) 100%);
+  background: linear-gradient(1.65deg, rgba(3, 54, 128, 0.7) 6.16%, rgba(255, 255, 255, 0.7) 239.51%);
   min-height: 100vh;
   color: var(--deep-navy);
 }
@@ -43,7 +43,7 @@ code {
 
 /* Стили для форм */
 .form-container {
-  background: var(--pure-white);
+  background: linear-gradient(1.65deg, rgba(3, 54, 128, 0.7) 6.16%, rgba(255, 255, 255, 0.7) 239.51%);
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(27, 41, 81, 0.1);
   padding: 40px;
@@ -163,6 +163,73 @@ code {
   display: block;
 }
 
+/* Стили для главной страницы */
+.home-page {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  background: linear-gradient(229.72deg, rgba(217, 217, 217, 0) 39.88%, rgba(3, 54, 128, 0.46) 99.73%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+
+.home-window {
+  width: 80%;
+  height: 80%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+}
+
+.home-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.home-subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 40px;
+  opacity: 0.9;
+}
+
+.logout-button {
+  /* раньше был полупрозрачный — заменено на заметный голубой стиль */
+  width: auto;
+  padding: 12px 20px;
+  background: linear-gradient(45deg, var(--bright-cyan), var(--royal-blue));
+  color: var(--pure-white);
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s;
+  box-shadow: 0 8px 20px rgba(65,105,225,0.18);
+}
+
+.logout-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(65,105,225,0.22);
+  opacity: 0.98;
+}
+
+.logout-button:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(65,105,225,0.14);
+}
+
 /* Адаптивность */
 @media (max-width: 480px) {
   .form-container {
@@ -172,5 +239,18 @@ code {
   
   .form-title {
     font-size: 1.5rem;
+  }
+  
+  .home-window {
+    width: 90%;
+    height: 70%;
+  }
+  
+  .home-title {
+    font-size: 2rem;
+  }
+  
+  .home-subtitle {
+    font-size: 1.2rem;
   }
 }

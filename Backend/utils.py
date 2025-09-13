@@ -119,23 +119,40 @@ class TextGenerator:
         self.model = model
 
      def create_tatar_text(self):
-        text = generate_content(self.text)
+        if self.model == 'yandex':
+           #text = translate_text("AQVN1439cSbZ3zvfEBeKusU4CPtgTVpvxMa5BOQb", folder_id, self.text, source_language="tt", target_language="ru")
+
+           text = ask_yandex_gpt(self.text)
+         #  print("Ответ модели:", text)
+           text = translate_text("AQVN1439cSbZ3zvfEBeKusU4CPtgTVpvxMa5BOQb", folder_id, text, source_language="ru", target_language="tt")
+         #  print(f"Перевод: {text}")
+        else:
+            text = translate_text("AQVN1439cSbZ3zvfEBeKusU4CPtgTVpvxMa5BOQb", folder_id, self.text, source_language="tt", target_language="ru")
+            text = generate_content(self.text)
+            text = translate_text("AQVN1439cSbZ3zvfEBeKusU4CPtgTVpvxMa5BOQb", folder_id, text, source_language="ru", target_language="tt")
         return {"text": text} 
         
-        #   tt2ru = translate_text(API_KEY_YANDEX, folder_id, self.text, source_language="tt", target_language="ru")
-        #   if self.model == 'yandex':
-        #       model_answer = ask_yandex_gpt(tt2ru)
-        #       print('f')
-        #   else:  
-        #     model_answer = generate_content(API_KEY_GEMINI, tt2ru)
-        
-        #   ru2tt = translate_text(API_KEY_YANDEX, folder_id, model_answer, source_language="ru", target_language="tt")
-        #   print(ru2tt)
-        #   mistakes, inds = find_mistakes(ru2tt)
-        #   if mistakes:
-        #      ru2tt = generate_content(f"Исправь неправильно написанные слова на татарском в этом тексте на татарском: {ru2tt}. Слова с ошибками: {', '.join(mistakes)}")
 
-        #   return {"text": ru2tt}
+
+class Corrector:
+        def __init__(self, text, model):
+          self.text = text
+          self.model = model
+            
+        def corrector(self):
+          tt2ru = translate_text("AQVN1439cSbZ3zvfEBeKusU4CPtgTVpvxMa5BOQb", folder_id, self.text, source_language="tt", target_language="ru")
+          if self.model == 'yandex':
+              model_answer = ask_yandex_gpt(tt2ru)
+          else:  
+            model_answer = generate_content(tt2ru)
+        
+          ru2tt = translate_text("AQVN1439cSbZ3zvfEBeKusU4CPtgTVpvxMa5BOQb", folder_id, model_answer, source_language="ru", target_language="tt")
+          print(ru2tt)
+          mistakes, inds = find_mistakes(ru2tt)
+          if mistakes:
+             ru2tt = generate_content(f"Исправь неправильно написанные слова на татарском в этом тексте на татарском: {ru2tt}. Слова с ошибками: {', '.join(mistakes)}")
+
+          return {"text": ru2tt}
 
                
             
