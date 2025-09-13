@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Form
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import create_engine, Column, Integer, String, or_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import jwt as pyjwt 
@@ -9,11 +8,14 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from sqlalchemy import create_engine, Column, Integer, String, or_, JSON, Text, DateTime, func
 import os
 import base64
 from models import *
 import re
 import requests
+from utils import *
+import json
 
 
 app = FastAPI()
@@ -51,6 +53,15 @@ class User(Base):
     hashed_password = Column(String(128), nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     name = Column(String(100), nullable=False)  
+
+
+class ChatHistory(Base):
+    __tablename__ = "chat_history"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False)
+    history = Column(JSON, nullable=False, default=[])
+
+
 
 
 Base.metadata.create_all(bind=engine)
@@ -135,8 +146,6 @@ def userinfo(current_user: User = Depends(get_current_user)):
     }
 
 
-
-
 @app.get("/test-connection")
 def test_connection(db: Session = Depends(get_db)):
 
@@ -144,7 +153,55 @@ def test_connection(db: Session = Depends(get_db)):
     return {"msg": "Connection successful", "users_count": user_count}
 
 
-app.post("/corrector/find_mistakes")
+
+@app.post("/chat")
+def chat_request(message: GPTRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    user_entry = {
+        "role": "user",
+        "content": message.prompt,
+        "timestamp": datetime.datetime.utcnow().isoformat()
+    }
+    chat = db.query(ChatHistory).filter(ChatHistory.user_id == current_user.id).first()
+    if chat:
+        history = chat.history or []
+        history.append(user_entry)
+        chat.history = history
+    else:
+        history = [user_entry]
+        chat = ChatHistory(user_id=current_user.id, history=history)
+        db.add(chat)
+
+    try:
+        db.commit()
+        db.refresh(chat)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to save chat history")
+
+    payload_for_gpt = json.dumps(chat.history, ensure_ascii=False)
+    generator = TextGenerator(payload_for_gpt)
+    response = generator.create_tatar_text()
+
+    assistant_entry = {
+        "role": "assistant",
+        "content": response,
+        "timestamp": datetime.datetime.utcnow().isoformat()
+    }
+    chat.history = (chat.history or []) + [assistant_entry]
+    try:
+        db.commit()
+        db.refresh(chat)
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update chat history with assistant response")
+
+    return {"response": response}
+
+
+
+
+
+@app.post("/corrector/find_mistakes")
 def find_mistakes(request: CorrectorFRequest):
     text = request.text
 
@@ -169,3 +226,5 @@ def find_mistakes(request: CorrectorFRequest):
    
     mistakes = find_mistakes(text)
     return {"mistakes": mistakes}
+
+
