@@ -128,7 +128,7 @@ class TextGenerator:
 
            text = ask_yandex_gpt(self.text)
          #  print("Ответ модели:", text)
-         #  text = translate_text(os.getenv("API_KEY_YANDEX"), folder_id, text, source_language="ru", target_language="tt")
+           text = translate_text(os.getenv("API_KEY_YANDEX"), folder_id, text, source_language="ru", target_language="tt")
          #  print(f"Перевод: {text}")
         else:
            # text = translate_text(, folder_id, self.text, source_language="tt", target_language="ru")

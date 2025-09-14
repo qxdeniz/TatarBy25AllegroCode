@@ -1,19 +1,169 @@
+/* Добавлен шрифт Aresenica (используем файл Arsenical.ttf как источник) */
+@font-face {
+  font-family: 'Aresenica';
+  src: url('../../Arsenical.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  /* unicode-range исключает цифры U+0030–U+0039, чтобы цифры брались из системного шрифта */
+  unicode-range: U+0000-002F, U+003A-FFFF;
+}
+
+/* Принудительно применяем Aresenica ко всем элементам (включая псевдо-элементы) */
+*, *::before, *::after {
+  font-family: 'Aresenica', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+:root {
+    --sidebar-offset: 60px; /* глобальный дефолт, чтобы фиксированные элементы могли наследовать значение */
+}
+
 /* Общие стили */
 body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background: linear-gradient(180deg, #ffffff 0%, #f0f8ff 100%);
+    background: linear-gradient(229.72deg, rgba(217, 217, 217, 0) 39.88%, rgba(3, 54, 128, 0.46) 99.73%);
+    font-family: 'Aresenica', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
-    justify-content: center;
+    height: 100vh;
+}
+
+/* Сайдбар */
+.sidebar {
+    background-color: #1e3a8a; /* Оставляем текущий цвет */
+    color: white;
+    width: 240px;
+    transition: width 0.3s;
+    display: flex;
+    flex-direction: column;
+    position: fixed; /* Фиксируем панель */
+    left: 0; /* Устанавливаем начало панели от левого края экрана */
+    top: 0; /* Устанавливаем начало панели от верхнего края экрана */
+    height: 100vh; /* Высота панели на весь экран */
+    z-index: 1000; /* Устанавливаем высокий z-index для отображения поверх других элементов */
+}
+
+.sidebar.collapsed {
+    width: 60px;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    padding: 22px;
+    cursor: pointer;
+    text-align: left;
+}
+
+/* Делаем иконку "Агенты" белой и скрываем текст, если меню закрыто */
+nav a img {
+    filter: brightness(0) invert(1); /* Делаем иконку белой */
+}
+
+.sidebar.collapsed nav a .text {
+    display: none; /* Скрываем текст, если меню закрыто */
+}
+
+nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 6px;
+    display: flex;
     align-items: center;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    gap: 10px;
+}
+
+nav a:hover {
+    background-color: #3b82f6; /* Цвет при наведении */
+}
+
+.profile {
+    padding: 10px;
+    border-top: 1px solid #3b82f6; /* Цвет разделителя */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer; /* показываем, что можно кликнуть */
+    position: relative; /* чтобы позиционировать popup внутри */
+}
+
+.profile img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.collapsed .text {
+    display: none;
+}
+
+/* Popup, который появляется при клике на блок "Мой профиль" */
+.profile-popup {
+    position: absolute;
+    bottom: 64px; /* над блоком профиля */
+    left: 12px;
+    min-width: 160px;
+    background: rgba(255,255,255,0.98);
+    color: #1B2951;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(27,41,81,0.12);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-popup .form-button {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: none;
+    background: #031A6B;
+    color: #fff;
+    cursor: pointer;
+}
+
+.profile-popup .form-button:hover {
+    opacity: 0.95;
+}
+
+/* При свернутом сайдбаре — корректируем позицию всплывающего окна */
+.sidebar.collapsed .profile-popup {
+    left: 40px; /* центрируем над иконкой */
+}
+
+/* Контент */
+.content {
+    flex: 1;
+    background: #f3f3f3;
+    padding: 20px;
+}
+
+/* Контейнер приложения */
+.app-container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    position: relative;
+    overflow: hidden;
 }
 
 /* Основной контейнер */
 .main-container {
-    width: 100%;
-    max-width: 800px;
+    --sidebar-offset: 60px; /* по умолчанию — компактный сайдбар */
+    flex: 1;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -22,36 +172,105 @@ body {
     padding: 20px;
     box-sizing: border-box;
     overflow: hidden;
+    transition: all 0.3s ease;
+    margin-left: 0; /* оставлено для обратной совместимости */
+    position: relative;
 }
 
-/* Приветственное сообщение */
+/* Когда меню открыто, даём внутренний отступ слева равный ширине сайдбара */
+.main-container.menu-open {
+    --sidebar-offset: 240px; /* при открытом сайдбаре */
+    padding-left: 240px; /* ширина сайдбара в открытом состоянии */
+}
+
+/* Когда меню закрыто (компактное), даём внутренний отступ равный ширине компактного сайдбара */
+.main-container.sidebar-collapsed {
+    --sidebar-offset: 60px;
+    padding-left: 60px; /* ширина сайдбара в закрытом состоянии */
+}
+
+/* Центрируем приветственное сообщение относительно доступной области, учитывая сайдбар */
 .welcome-message {
+    position: fixed; /* фиксируем относительно окна */
+    top: 40%; /* чуть выше центра */
+    left: calc(50% + (var(--sidebar-offset) / 2));
+    transform: translate(-50%, -50%);
     text-align: center;
-    margin-bottom: 20px;
-    flex-shrink: 0;
+    z-index: 1005; /* Поверх поля ввода и сайдбара */
+    display: block;
+    pointer-events: auto; /* Разрешаем взаимодействие с кнопками внутри */
+    width: auto;
+    max-width: 720px;
+    padding: 0; /* убираем фоновые отступы */
+    box-sizing: border-box;
+    background: transparent; /* Убираем фон */
+    border-radius: 0; /* без скругления */
+    box-shadow: none; /* убираем тень */
 }
 
-.welcome-message h1 {
-    font-size: 2.5rem;
-    font-weight: 400;
-    color: #1e3a8a;
-    margin: 0;
-    font-family: 'Times New Roman', serif;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* Когда приложение в начальном состоянии (нет сообщений) — центрируем вместе приветственное сообщение и поле ввода */
+.main-container.initial-centered .welcome-message {
+    /* чуть выше центра, оставляем прежний left/transform, но усиливаем z-index */
+    position: fixed;
+    top: 50%;
+    left: calc(50% + (var(--sidebar-offset) / 2));
+    transform: translate(-50%, -50%);
+    z-index: 1110;
 }
 
-/* Контейнер чата */
-.chat-container {
+.main-container.initial-centered .input-container {
+    /* подвинуть поле ввода ниже приветствия, по центру доступной области */
+    position: fixed;
+    top: calc(50% + 80px);
+    bottom: auto; /* отключаем привязку к низу */
+    left: calc(50% + (var(--sidebar-offset) / 2));
+    transform: translateX(-50%);
     width: 100%;
     max-width: 600px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-    overflow: hidden;
+    z-index: 1105;
+    transition: top 0.35s ease, bottom 0.35s ease;
 }
 
-/* Область сообщений */
+/* Убедимся, что при обычном состоянии (после первого сообщения) поле ввода снова прилипает к низу */
+.main-container:not(.initial-centered) .input-container {
+    position: fixed;
+    bottom: 20px;
+    top: auto;
+    left: calc(50% + (var(--sidebar-offset) / 2));
+    transform: translateX(-50%);
+    transition: top 0.35s ease, bottom 0.35s ease;
+}
+
+/* Адаптив для очень маленьких экранов: уменьшаем отступ между приветствием и полем ввода */
+@media (max-width: 480px) {
+    .main-container.initial-centered .input-container {
+        top: calc(50% + 60px);
+        max-width: 90%;
+    }
+
+    .main-container.initial-centered .welcome-message {
+        top: 34%;
+        max-width: 92%;
+        padding: 0 12px;
+    }
+}
+
+/* Контейнер чата - фиксированный, центр по доступной области окна */
+.chat-container {
+    position: fixed; /* фиксируем относительно окна */
+    left: calc(50% + (var(--sidebar-offset) / 2));
+    transform: translateX(-50%); /* центр по горизонтали доступной области */
+    top: 24px; /* чуть ниже верхней границы */
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1100; /* выше, чем поле ввода */
+    bottom: 160px; /* запас под поле ввода */
+}
+
+/* Область сообщений занимает доступное пространство внутри фикcированного контейнера */
 .messages-area {
     flex: 1;
     overflow-y: auto;
@@ -59,21 +278,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    padding-bottom: 220px; /* скорректировано под уменьшенную высоту поля ввода */
-}
-
-.messages-area::-webkit-scrollbar {
-    width: 6px;
-}
-
-.messages-area::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-.messages-area::-webkit-scrollbar-thumb {
-    background: rgba(59, 130, 246, 0.3);
-    border-radius: 3px;
+    padding-bottom: 0;
 }
 
 /* Сообщения */
@@ -104,8 +309,10 @@ body {
 }
 
 .user-message .message-content {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: white;
+    /* делаем фон сообщений пользователя таким же, как фон поля ввода */
+    background: linear-gradient(2deg, rgba(3, 54, 128, 0.7) 6.16%, rgba(255, 255, 255, 0.7) 239.51%);
+    color: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .message-model {
@@ -158,31 +365,72 @@ body {
 
 /* Контейнер поля ввода (фиксирован снизу) */
 .input-container {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
+    position: fixed; /* Фиксируем поле ввода снизу */
     bottom: 20px;
+    /* Центрируем поле ввода относительно той же доступной области, что и чат */
+    left: calc(50% + (var(--sidebar-offset) / 2));
+    transform: translateX(-50%);
     width: 100%;
-    max-width: 640px; /* дополнительно сузили общий контейнер ввода */
-    padding: 0 20px;
+    max-width: 600px; /* совпадает с max-width .chat-container */
+    padding: 0; /* убрано, чтобы содержимое точно выравнивалось с чат-контейнером */
     z-index: 50;
     box-sizing: border-box;
 }
 
 /* Основное поле ввода - большой фиксированный виджет */
 .input-field {
+    background: linear-gradient(2deg, rgba(3, 54, 128, 0.7) 6.16%, rgba(255, 255, 255, 0.7) 239.51%);
+    border: none; /* Убираем возможные наложения */
+    box-shadow: none; /* Убираем тени, которые могут затемнять градиент */
     width: 100%;
-    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 50%, #1d4ed8 100%);
     border-radius: 20px;
     padding: 24px;
-    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
     position: relative;
     min-height: 180px; /* дополнительно уменьшили высоту */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     max-width: 600px; /* ещё меньше ширина самого виджета */
-    margin: 0 auto; /* центрируем внутри контейнера */
+    margin: 0; /* убираем auto, чтобы занимал всю ширину контейнера */
+    box-sizing: border-box;
+}
+
+/* Компактное однострочное поле ввода для SciencePage */
+.input-field.compact-input-field {
+    padding: 10px 12px;
+    min-height: 56px;
+}
+
+.input-field.compact-input-field .main-input.single-line-input {
+    flex: 0 1 auto;
+    height: 28px;
+    min-height: 28px;
+    max-height: 28px;
+    padding: 6px 8px;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #FFFFFF;
+}
+
+.input-field.compact-input-field .input-bottom {
+    margin-top: 8px;
+}
+
+/* Убедимся, что иконка отправки корректно центрируется */
+.input-field.compact-input-field .send-btn {
+    width: 40px;
+    height: 40px;
+    padding: 6px;
+}
+
+.input-field.compact-input-field .send-btn img {
+    width: 20px;
+    height: 20px;
+    display: block;
 }
 
 /* Текстовое поле теперь многострочное и занимает большую высоту */
@@ -205,7 +453,7 @@ body {
 }
 
 .main-input::placeholder {
-    color: rgba(255,255,255,0.75); /* полупрозрачный белый для плейсхолдера */
+    color: rgba(3, 54, 128, 0.57); /* Новый цвет с 57% прозрачностью */
     font-size: 1.2rem;
     font-weight: 300;
 }
@@ -239,11 +487,17 @@ body {
     justify-content: center;
     transition: all 0.3s ease;
     backdrop-filter: blur(10px);
+    border: 2px solid #033680; /* Устанавливаем цвет рамки */
 }
 
 .attach-btn:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: translateY(-2px);
+}
+
+/* Изменение цвета скрепки для прикрепления файла */
+.attach-btn svg {
+    stroke: #031A6B; /* Устанавливаем цвет скрепки */
 }
 
 /* Кнопка выбора ИИ */
@@ -314,7 +568,7 @@ body {
     height: 44px;
     border: none;
     border-radius: 50%;
-    background: #0f172a;
+    background: #031A6B; /* Новый цвет */
     color: white;
     cursor: pointer;
     display: flex;
@@ -325,7 +579,7 @@ body {
 }
 
 .send-btn:hover:not(:disabled) {
-    background: #1e40af;
+    background: #031A6B; /* Новый цвет при наведении */
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(30, 58, 138, 0.4);
 }
@@ -393,3 +647,551 @@ body {
         font-size: 0.9rem;
     }
 }
+
+/* Стили для меню */
+
+/* Кнопка троеточия в левом верхнем углу */
+.menu-toggle-btn {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #1e3a8a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    
+    
+}
+
+
+.menu-dots {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: center;
+}
+
+.menu-dots span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #1e3a8a;
+    transition: all 0.3s ease;
+}
+
+.menu-toggle-btn:hover .menu-dots span {
+    background: #3b82f6;
+}
+
+/* Боковое меню */
+.side-menu {
+    width: 50px; /* Тонкая панель в закрытом состоянии */
+    height: 100vh;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 248, 255, 0.95) 100%);
+    backdrop-filter: blur(20px);
+    transform: translateX(0); /* Панель всегда видна */
+    transition: width 0.3s ease;
+    position: fixed; /* Исправлено с absolute на fixed */
+    left: 0;
+    top: 0;
+    z-index: 10;
+    overflow: hidden; /* Скрываем содержимое, выходящее за границы */
+}
+
+.side-menu.open {
+    width: 12.5%; /* Расширение до полной ширины при открытии */
+    overflow: visible; /* В открытом состоянии содержимое видно */
+}
+
+.menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(30, 58, 138, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-header h3 {
+    margin: 0;
+    color: #1e3a8a;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.menu-close-btn {
+    width: 35px;
+    height: 35px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(30, 58, 138, 0.1);
+    color: #1e3a8a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.menu-close-btn:hover {
+    background: rgba(30, 58, 138, 0.2);
+    transform: scale(1.1);
+}
+
+.menu-content {
+    display: none; /* Скрываем содержимое меню в закрытом состоянии */
+}
+
+.side-menu.open .menu-content {
+    display: block; /* Показываем содержимое меню при открытии */
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+    color: #1e3a8a;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.menu-item:hover {
+    background: rgba(30, 58, 138, 0.1);
+    border-left-color: #3b82f6;
+    transform: translateX(5px);
+}
+
+.menu-item span:first-child {
+    font-size: 1.3rem;
+    width: 25px;
+    text-align: center;
+}
+
+/* Большая красная буква Y для логотипа Yandex */
+.yandex-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #d92027; /* ярко-красный */
+    font-weight: 800;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    font-size: 20px;
+    line-height: 1;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.06);
+}
+
+/* В кнопке выбора ИИ делаем букву чуть больше и центрируем */
+.ai-select-btn .yandex-logo {
+    font-size: 22px;
+    width: auto;
+    height: auto;
+    padding: 0 2px;
+}
+
+@media (max-width: 480px) {
+    .yandex-logo { font-size: 18px; width: 24px; height: 24px; }
+    .ai-select-btn .yandex-logo { font-size: 20px; }
+}
+
+/* Адаптивность для меню */
+@media (max-width: 768px) {
+    .side-menu {
+        width: 80%;
+    }
+    
+    .main-container.menu-open {
+        margin-left: 80%;
+    }
+    
+    .menu-toggle-btn {
+        width: 45px;
+        height: 45px;
+        top: 15px;
+        left: 15px;
+    }
+    
+    .menu-header {
+        padding: 15px;
+    }
+    
+    .menu-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .menu-item {
+        padding: 12px 15px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .side-menu {
+        width: 90%;
+    }
+    
+    .main-container.menu-open {
+        margin-left: 90%;
+    }
+    
+    .menu-toggle-btn {
+        width: 40px;
+        height: 40px;
+        top: 10px;
+        left: 10px;
+    }
+    
+    .menu-dots span {
+        width: 3px;
+        height: 3px;
+    }
+    
+    .menu-header {
+        padding: 12px;
+    }
+    
+    .menu-header h3 {
+        font-size: 1.2rem;
+    }
+    
+    .menu-item {
+        padding: 10px 12px;
+        font-size: 0.95rem;
+    }
+}
+
+/* Фигура над приветственным сообщением: Ellipse1 + Star + Ellipse2 */
+.hero-figure {
+    /* фигура позиционируется относительно окна, но выравнивается по той же доступной области, что и welcome-message */
+    position: fixed;
+    top: calc(50% - 11rem); /* поднимаем над центром (регулируйте при необходимости) */
+    left: calc(50% + (var(--sidebar-offset) / 2));
+    transform: translateX(-50%);
+    width: 14rem; /* отзывчивый размер */
+    height: auto;
+    z-index: 1120; /* над welcome-message */
+    pointer-events: none; /* фигура декоративная */
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    display: block;
+}
+
+.hero-figure img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+}
+
+.hero-ellipse1 {
+    width: 180px;
+    height: 180px;
+    z-index: 1;
+}
+
+.hero-star {
+    width: 150px;
+    height: 150px;
+    z-index: 2;
+    transform-origin: 50% 50%; /* центр как точка вращения */
+    animation: spin 6s linear infinite; /* плавное непрерывное вращение */
+    transform: translate(-50%, -50%) rotate(-6deg); /* немного смещаем звезду вверх */
+}
+
+.hero-ellipse2 {
+    width: 80px;
+    height: 80px;
+    z-index: 3;
+    transform: translate(36%, 30%); /* смещаем маленький белый кружок вправо и вниз */
+}
+
+/* Если нужно плавно скрывать фигуру вместе с приветствием, управляем opacity через класс initial-centered */
+.main-container.initial-centered .hero-figure {
+    opacity: 1;
+}
+
+.main-container:not(.initial-centered) .hero-figure {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px);
+    pointer-events: none;
+}
+
+@keyframes spin {
+    from { transform: translate(-50%, -50%) rotate(-6deg); }
+    to   { transform: translate(-50%, -50%) rotate(354deg); }
+}
+
+/* Стиль для декоративного эллипса Ellipse0: его центр должен быть в верхнем правом углу окна */
+.hero-ellipse0 {
+    position: fixed; /* фиксируем относительно окна */
+    top: 0;
+    right: 0;
+    width: 600px; /* можно подрегулировать при необходимости */
+    height: auto;
+    transform: translate(50%, -50%); /* смещаем так, чтобы центр изображения совпал с правым верхним углом */
+    z-index: 1080; /* под некоторыми элементами, при необходимости изменить */
+    pointer-events: none; /* декоративный элемент не мешает взаимодействию */
+}
+
+/* Стиль для декоративной звезды Star1: центр звезды совпадает с верхним правым углом; увеличен в 1.5 раза */
+.hero-star1 {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 960px; /* уменьшено в 1.5 раза: 1440 / 1.5 = 960 */
+    height: auto;
+    transform: translate(50%, -50%); /* центр изображения в правом верхнем углу */
+    z-index: 1070; /* ниже, чем у эллипса, чтобы быть позади */
+    pointer-events: none;
+    opacity: 1;
+    transform-origin: 50% 50%; /* центр как точка вращения */
+    animation: spin-ccw 12s linear infinite; /* вращение против часовой стрелки */
+}
+
+@keyframes spin-cw {
+    from { transform: translate(50%, -50%) rotate(0deg); }
+    to   { transform: translate(50%, -50%) rotate(360deg); }
+}
+
+@keyframes spin-ccw {
+    from { transform: translate(50%, -50%) rotate(0deg); }
+    to   { transform: translate(50%, -50%) rotate(-360deg); }
+}
+
+/* Стиль для декоративной звезды Star2: центр звезды совпадает с верхним правым углом; размер в 3 раза больше hero-star1 и расположена за ней */
+.hero-star2 {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 2160px; /* 3 × 960px */
+    height: auto;
+    transform: translate(50%, -50%); /* центр изображения в правом верхнем углу */
+    z-index: 1060; /* ниже, чем у hero-star1, чтобы быть позади */
+    pointer-events: none;
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .hero-ellipse0 { width: 240px; }
+    .hero-star1 { width: 720px; } /* 480 * 1.5 = 720 */
+    .hero-star2 { width: 1440px; } /* 3 × 720 = 2160 */
+}
+
+@media (max-width: 480px) {
+    .hero-ellipse0 { width: 160px; }
+    .hero-star1 { width: 480px; } /* 320 * 1.5 = 480 */
+    .hero-star2 { width: 960px; } /* 3 × 480 = 1440 */
+}
+
+/* Декоративные квадраты на странице Агентов */
+.decor-squares {
+    position: fixed; /* фиксируем относительно окна */
+    top: 62.5%; /* сдвиг вниз в 1.25 раза от центра (50% * 1.25) */
+    left: calc(50% + (var(--sidebar-offset) / 2)); /* центрируем по доступной области с учётом сайдбара */
+    transform: translate(-50%, -50%); /* центрируем по обеим осям */
+    display: flex;
+    gap: 72px; /* 18px * 4 */
+    align-items: center; /* на одной высоте */
+    justify-content: center; /* равномерно по центру */
+    pointer-events: none;
+    z-index: 1090;
+}
+
+/* Разрешаем взаимодействие (клики) с самими квадратами внутри контейнера */
+.decor-squares .decor-square {
+    pointer-events: auto;
+}
+
+/* общий стиль для декор-квадрата — увеличен в 4 раза */
+.decor-square {
+    width: 288px; /* 72 * 4 */
+    height: 293px; /* уменьшено на треть от 440px (≈293px) */
+    background: #68A691; /* требуемый цвет */
+    border-radius: 60px; /* оставляем указанный радиус */
+    box-shadow: 0 8px 20px rgba(18, 35, 28, 0.12);
+    transform-origin: center bottom;
+    position: relative; /* добавлено для позиционирования иконки и текста внутри */
+    overflow: hidden; /* прячет лишнее за границами квадрата */
+}
+
+/* Сделаем все три квадрата одинаковыми (ровные и без поворотов) */
+.decor-square.sq1, .decor-square.sq2, .decor-square.sq3 {
+    transform: none;
+}
+
+/* Иконка внутри левых и центрального квадратов: по горизонтали центр, чуть выше середины по вертикали */
+.decor-square.sq1 .square-icon,
+.decor-square.sq2 .square-icon,
+.decor-square.sq3 .square-icon {
+    position: absolute;
+    left: 50%;
+    top: 38%; /* чуть выше центра */
+    transform: translate(-50%, -50%);
+    width: 100px; /* размер иконки, можно подрегулировать */
+    height: 100px;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.12));
+}
+
+/* Текст под иконкой: по горизонтали центр, чуть ниже середины по вертикали */
+.decor-square.sq1 .square-title,
+.decor-square.sq2 .square-title,
+.decor-square.sq3 .square-title {
+    position: absolute;
+    left: 50%;
+    top: 60%; /* сохраняем заголовок чуть выше центра */
+    transform: translate(-50%, -50%);
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 28px; /* уменьшаем размер заголовка для лучшего визуального баланса */
+    text-align: center;
+    pointer-events: none;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+
+/* Текст под заголовком квадрата (подпись) */
+.decor-square .square-subtitle {
+    position: absolute;
+    left: 50%;
+    /* размещаем ниже заголовка (примерно 12% от высоты квадрата ниже центра) */
+    top: 74%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: center;
+    max-width: 82%;
+    pointer-events: none;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+
+/* На очень маленьких экранах уменьшаем размеры, чтобы не выходили за экран */
+@media (max-width: 480px) {
+    .decor-squares { gap: 20px; top: calc(50% + 12.5px); }
+    .decor-square { width: 120px; height: 123px; border-radius: 40px; }
+    .decor-square.sq1 .square-icon, .decor-square.sq2 .square-icon, .decor-square.sq3 .square-icon { width: 40px; height: 40px; top: 38%; }
+    .decor-square.sq1 .square-title, .decor-square.sq2 .square-title, .decor-square.sq3 .square-title { font-size: 12px; top: 62%; }
+    .decor-square .square-subtitle { font-size: 11px; top: 82%; }
+}
+
+@media (max-width: 768px) {
+    .decor-square { width: 220px; height: 224px; }
+    .decor-square.sq1 .square-icon, .decor-square.sq2 .square-icon, .decor-square.sq3 .square-icon { width: 56px; height: 56px; top: 40%; }
+    .decor-square.sq1 .square-title, .decor-square.sq2 .square-title, .decor-square.sq3 .square-title { font-size: 18px; top: 60%; }
+    .decor-square .square-subtitle { font-size: 12px; top: 78%; }
+}
+
+/* Заголовок над декоративными квадратами */
+.decor-title {
+    position: fixed;
+    /* поднять заголовок выше, увеличивая расстояние до квадратов */
+    top: calc(62.5% - 320px); /* было -240px, увеличено на 80px */
+    left: calc(50% + (var(--sidebar-offset) / 2));
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column; /* ставим строки вертикально */
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    pointer-events: none;
+    z-index: 1095; /* над квадратами */
+    white-space: normal;
+    text-align: center;
+}
+
+.decor-title .title-light {
+    color: #031A6B; /* изменён цвет с #FFFFFF на требуемый #033680 */
+    font-size: 100px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.decor-title .title-highlight {
+    color: #05B2DC;
+    font-size: 100px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+@media (max-width: 768px) {
+    .decor-title .title-light, .decor-title .title-highlight {
+        font-size: 64px;
+    }
+    .decor-title { top: calc(62.5% - 260px); }
+}
+
+@media (max-width: 480px) {
+    .decor-title .title-light, .decor-title .title-highlight {
+        font-size: 28px;
+    }
+    .decor-title { top: calc(50% - 170px); }
+}
+
+/* Кнопка создания агента под декоративными квадратами */
+.create-agent-btn {
+    position: fixed; /* фиксируем относительно окна */
+    left: calc(50% + (var(--sidebar-offset) / 2)); /* центрируем относительно доступной области с учётом сайдбара */
+    transform: translateX(-50%);
+    top: calc(62.5% + 220px); /* расположение под квадратами, подберите при необходимости */
+    background: #68A691; /* тот же цвет, что и у квадрата */
+    color: #FFFFFF;
+    border: none;
+    padding: 18px 36px;
+    border-radius: 60px; /* такие же закругления, как у квадрата */
+    font-weight: 700;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(18, 35, 28, 0.12);
+    z-index: 1090; /* над квадратами */
+    pointer-events: auto;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.create-agent-btn:hover {
+    transform: translateX(-50%) translateY(-4px);
+    box-shadow: 0 12px 26px rgba(18, 35, 28, 0.16);
+}
+
+.create-agent-btn:active {
+    transform: translateX(-50%) translateY(0);
+}
+
+.create-agent-btn:focus {
+    outline: 3px solid rgba(3, 54, 128, 0.12);
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    .create-agent-btn {
+        top: calc(62.5% + 180px);
+        padding: 14px 28px;
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .create-agent-btn {
+        top: calc(62.5% + 140px);
+        padding: 10px 18px;
+        font-size: 14px;
+        border-radius: 40px;
+    }
+}
+

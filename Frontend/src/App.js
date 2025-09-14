@@ -5,19 +5,20 @@ import RegisterForm from './components/RegisterForm';
 import HomePage from './components/HomePage';
 import AgentCreateForm from './components/AgentCreateForm';
 import AgentChat from './components/AgentChat';
+import AgentsPage from './components/AgentsPage';
+import SciencePage from './components/SciencePage';
+import ArtPage from './components/ArtPage';
+import AutopostingForm from './components/AutopostingForm';
 
 function App() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('access_token'));
 
   const switchToRegister = () => {
-    setIsLogin(false);
     navigate('/register');
   };
 
   const switchToLogin = () => {
-    setIsLogin(true);
     navigate('/login');
   };
 
@@ -33,7 +34,6 @@ function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setIsLogin(true);
     localStorage.removeItem('access_token');
     localStorage.removeItem('userName');
     navigate('/login');
@@ -43,8 +43,8 @@ function App() {
     <div className="App">
       <div className="container">
         <Routes>
-          {/* Главная страница (доступна всем) */}
-          <Route path="/" element={<HomePage onLogout={handleLogout} />} />
+          {/* Главная страница — доступна только аутентифицированным; иначе редирект на /login */}
+          <Route path="/" element={isAuthenticated ? <HomePage onLogout={handleLogout} /> : <Navigate to="/login" replace />} />
 
           {/* Отдельные маршруты для логина/регистрации */}
           <Route path="/login" element={
@@ -64,8 +64,13 @@ function App() {
           } />
 
           {/* Маршруты агентов (требуют наличия компонентов) */}
+          <Route path="/agents" element={isAuthenticated ? <AgentsPage /> : <Navigate to="/login" replace />} />
           <Route path="/agents/create" element={isAuthenticated ? <AgentCreateForm /> : <Navigate to="/login" replace />} />
           <Route path="/agents/:agent_name" element={isAuthenticated ? <AgentChat /> : <Navigate to="/login" replace />} />
+          <Route path="/autoposting" element={isAuthenticated ? <AutopostingForm /> : <Navigate to="/login" replace />} />
+
+          <Route path="/science" element={isAuthenticated ? <SciencePage /> : <Navigate to="/login" replace />} />
+          <Route path="/art" element={isAuthenticated ? <ArtPage /> : <Navigate to="/login" replace />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

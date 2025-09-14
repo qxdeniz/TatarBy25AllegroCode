@@ -28,13 +28,13 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
 
     // Валидация паролей
     if (formData.password !== formData.confirmPassword) {
-      setError('Пароли не совпадают');
+      setError('Серсүзләр туры килми');
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Пароль должен содержать минимум 6 символов');
+      setError('Парольдә кимендә 6 символ булырга тиеш');
       setLoading(false);
       return;
     }
@@ -73,11 +73,11 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
 
   return (
     <div className="form-container">
-      <h2 className="form-title">Регистрация</h2>
+      <h2 className="form-title">Теркәү</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name" className="form-label">
-            Имя
+            Исем
           </label>
           <input
             type="text"
@@ -87,7 +87,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
             onChange={handleChange}
             className="form-input"
             required
-            placeholder="Введите ваше имя"
+            placeholder="Исемегезне кертегез"
           />
         </div>
 
@@ -103,7 +103,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
             onChange={handleChange}
             className="form-input"
             required
-            placeholder="Введите ваш email"
+            placeholder="Email 'ыгызны кертегез"
           />
         </div>
 
@@ -119,13 +119,13 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
             onChange={handleChange}
             className="form-input"
             required
-            placeholder="Введите пароль (минимум 6 символов)"
+            placeholder="Парольне кертегез"
           />
         </div>
 
         <div className="form-group">
           <label htmlFor="confirmPassword" className="form-label">
-            Подтвердите пароль
+            Парольне раслагыз
           </label>
           <input
             type="password"
@@ -135,7 +135,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
             onChange={handleChange}
             className="form-input"
             required
-            placeholder="Подтвердите пароль"
+            placeholder="Парольне раслагыз"
           />
         </div>
 
@@ -146,13 +146,13 @@ const RegisterForm = ({ onSwitchToLogin, onRegisterSuccess }) => {
           className="form-button"
           disabled={loading}
         >
-          {loading ? 'Регистрация...' : 'Зарегистрироваться'}
+          {loading ? 'Теркәлү...' : 'Теркәлү'}
         </button>
       </form>
 
       <div className="auth-switch">
         <button type="button" onClick={onSwitchToLogin}>
-          Уже есть аккаунт? Войти
+            Инде аккаунт бармы? Керү
         </button>
       </div>
     </div>

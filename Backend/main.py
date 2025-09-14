@@ -286,16 +286,20 @@ def agent_exists(agent_name: str, db: Session = Depends(get_db)):
     agent = db.query(Agents).filter(Agents.name == agent_name).first()
     return {"exists": bool(agent)}
 
-@app.post("agents/creators/journey")
+import time
+
+@app.post("/creators/journey")
 def create_jorney(req: JorneyRequest):
     creator = JorneyGeneraor(req.prompt, "art")
+    time.sleep(15)
     jorney = creator.generate_jorney()
     return {"base64_pdf": jorney}
 
 
-@app.post("agents/creators/sci")
+@app.post("/creators/sci")
 def create_jorney(req: JorneyRequest):
     creator = JorneyGeneraor(req.prompt, "sci")
+    time.sleep(12)
     jorney = creator.generate_jorney()
     return {"base64_pdf": jorney}
 

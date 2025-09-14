@@ -94,7 +94,7 @@ const LoginForm = ({ onSwitchToRegister, onLoginSuccess }) => {
           className="form-button"
           disabled={loading}
         >
-          {loading ? 'Вход...' : 'Керү'}
+          {loading ? 'Керү...' : 'Керү'}
         </button>
       </form>
 

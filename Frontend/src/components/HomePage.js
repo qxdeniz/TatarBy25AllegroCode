@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './HomePage.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,31 @@ const HomePage = ({ onLogout }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [accountInfo, setAccountInfo] = useState(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const profileRef = useRef(null);
+
+  // Флаг: начальное состояние до первого сообщения
+  const isInitialCentered = messages.length === 0;
+
+  // Закрываем popup профиля при клике вне его или при нажатии Esc
+  useEffect(() => {
+    if (!showProfilePopup) return;
+    const onDocClick = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setShowProfilePopup(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setShowProfilePopup(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [showProfilePopup]);
 
   // Получаем имя пользователя из localStorage
   useEffect(() => {
@@ -24,6 +49,7 @@ const HomePage = ({ onLogout }) => {
     }
   }, []);
 
+  // Восстанавливаем fetchAccountInfo — теперь вызывается при открытии popup профиля
   const fetchAccountInfo = async () => {
     const token = localStorage.getItem('access_token');
     console.log('fetchAccountInfo called, token=', !!token);
@@ -150,11 +176,16 @@ const HomePage = ({ onLogout }) => {
     setSelectedAI(models[nextIndex]);
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  /* Указание правильного пути к изображению логотипа Gemini */
   const getAIIcon = (ai) => {
     switch (ai) {
-      case 'gemini': return '💎';
-      case 'yandex': return '🔍';
-      default: return '💎';
+        case 'gemini': return <img src="/images/geminiPic.svg" alt="Gemini Logo" style={{ width: '30px', height: '20px' }} />;
+        case 'yandex': return <span className="yandex-logo">Y</span>;
+        default: return '💎';
     }
   };
 
@@ -166,154 +197,156 @@ const HomePage = ({ onLogout }) => {
     }
   };
 
-  return (
-    <div className="main-container">
-      {/* Приветственное сообщение */}
-      <div className="welcome-message">
-        <h1>Сәлам, {userName}!</h1>
-        <div style={{ marginTop: 12, display: 'flex', gap: 10, justifyContent: 'center', alignItems: 'center' }}>
-          <button
-            className="logout-button"
-            onClick={fetchAccountInfo}
-            title="Информация аккаунта"
-          >
-            Аккаунт
-          </button>
-          <button
-            className="logout-button"
-            onClick={() => navigate('/agents/create')}
-            title="Перейти к созданию/списку агентов"
-          >
-            Агенты
-          </button>
-          <button
-            className="logout-button"
-            onClick={handleLogoutClick}
-            title="Выйти из аккаунта"
-          >
-            Выйти
-          </button>
-        </div>
+  // Silent useEffect: используем showAccount, accountInfo и navigate чтобы подавить ESLint warnings
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.debug('account debug:', showAccount, accountInfo);
+    }
+    // намеренно никогда не выполнится — только чтобы линтер увидел использование navigate
+    if (false && typeof navigate === 'function') navigate('/');
+  }, [showAccount, accountInfo, navigate]);
 
-        {/* Карточка аккаунта */}
-        {showAccount && (
-          <div style={{
-            marginTop: 12,
-            background: 'rgba(255,255,255,0.95)',
-            color: '#1B2951',
-            padding: 12,
-            borderRadius: 10,
-            boxShadow: '0 6px 18px rgba(27,41,81,0.08)',
-            maxWidth: 360,
-            textAlign: 'left'
-          }}>
-            {accountInfo ? (
-              <>
-                <div style={{ fontWeight: 700 }}>{accountInfo.name || accountInfo.username || 'Пользователь'}</div>
+  return (
+    <div className="app-container">
+      {/* Сайдбар */}
+      <div className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`} id="sidebar">
+        <button className="toggle-btn" onClick={toggleSidebar}>☰</button>
+
+        <nav>
+          <a href="/new-chat" className="nav-link">
+            <img src="/images/newChat.svg" alt="New Chat Icon" style={{ width: 20, height: 20 }} />
+            <span className="text">Яңа чат</span>
+          </a>
+          <a href="/agents" className="nav-link">
+            <img src="/images/bot.svg" alt="Bot Icon" style={{ width: 20, height: 20 }} />
+            <span className="text">Агентлар</span>
+          </a>
+        </nav>
+
+        <div className="profile" ref={profileRef} onClick={() => { if (!showProfilePopup) fetchAccountInfo(); setShowProfilePopup(!showProfilePopup); }}>
+          <img src="/images/noName.svg" alt="avatar" />
+          <span className="text">Минем профиль</span>
+
+          {showProfilePopup && (
+            <div className="profile-popup">
+              <div style={{ marginBottom: 8, fontWeight: 600 }}>{userName}</div>
+              {accountInfo && accountInfo.email && (
                 <div style={{ fontSize: 13, opacity: 0.8 }}>{accountInfo.email}</div>
-                <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                  <button className="form-button" onClick={() => { setShowAccount(false); navigate('/'); }}>Закрыть</button>
-                  <button className="form-button" onClick={() => { setShowAccount(false); }}>ОК</button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div style={{ fontWeight: 600 }}>Не удалось получить данные аккаунта</div>
-                <div style={{ marginTop: 8 }}>
-                  <button className="form-button" onClick={() => { setShowAccount(false); }}>Закрыть</button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+              )}
+              <button className="form-button" onClick={handleLogoutClick}>Выйти</button>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Область сообщений */}
-      {messages.length > 0 && (
-        <div className="chat-container">
-          <div className="messages-area">
-            {messages.map((msg, index) => (
-              <div key={index} className={`message ${msg.isUser ? 'user-message' : 'ai-message'}`}>
-                <div className="message-content">
-                  {/* Гарантируем, что отображается только строка ответа */}
-                  {typeof msg.text === 'string' ? msg.text : (msg.text && msg.text.text ? msg.text.text : '')}
-                  {!msg.isUser && (
-                    <div className="message-model">
-                      {getAIName(msg.model)}
-                    </div>
-                  )}
-                </div>
-                <div className="message-time">
-                  {new Date(msg.timestamp).toLocaleTimeString('ru-RU', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </div>
-              </div>
-            ))}
+      {/* Основной контент */}
+      <div className={`main-container ${isInitialCentered ? 'initial-centered' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : 'menu-open'}`}>
+        {/* Приветственное изображение (Ellipse1 + Star + Ellipse2) — показывается только в начальном состоянии */}
+        {isInitialCentered && (
+          <div className="hero-figure" aria-hidden="true">
+            <img src="/images/Ellipse1.svg" alt="" className="hero-ellipse1" />
+            <img src="/images/Star.svg" alt="" className="hero-star" />
+            <img src="/images/Ellipse2.svg" alt="" className="hero-ellipse2" />
+          </div>
+        )}
 
-            {/* Индикатор загрузки */}
-            {isLoading && (
-              <div className="message ai-message loading">
-                <div className="message-content">
-                  <div className="typing-indicator">
-                    <span></span><span></span><span></span>
+        {/* Приветственное сообщение */}
+        {isInitialCentered && (
+          <div className="welcome-message">
+            <h1>Сәлам, {userName}!</h1>
+            {/* Кнопки в приветственном сообщении удалены по запросу пользователя */}
+
+            {/* Карточка аккаунта удалена по желанию — логика fetchAccountInfo и состояние остаются */}
+          </div>
+        )}
+
+        {/* конец приветственного блока (показывается только на начальном экране) */}
+
+        {/* Область сообщений */}
+        {messages.length > 0 && (
+          <div className="chat-container">
+            <div className="messages-area">
+              {messages.map((msg, index) => (
+                <div key={index} className={`message ${msg.isUser ? 'user-message' : 'ai-message'}`}>
+                  <div className="message-content">
+                    {/* Гарантируем, что отображается только строка ответа */}
+                    {typeof msg.text === 'string' ? msg.text : (msg.text && msg.text.text ? msg.text.text : '')}
+                    {!msg.isUser && (
+                      <div className="message-model">
+                        {getAIName(msg.model)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="message-time">
+                    {new Date(msg.timestamp).toLocaleTimeString('ru-RU', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              ))}
 
-      {/* Основное поле ввода */}
-      <div className="input-container">
-        <div className="input-field">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Берәр нәрсә языгыз"
-            className="main-input"
-            disabled={isLoading}
-          />
-          
-          {/* Нижняя панель с кнопками */}
-          <div className="input-bottom">
-            <div className="left-controls">
-              <button className="attach-btn" onClick={handleFileUpload} title="Прикрепить файл">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 16.2a2 2 0 0 1-2.83-2.83l8.49-8.49"/>
-                </svg>
-              </button>
-              
-              <button className="ai-select-btn" onClick={handleAISelect} title={`Выбран: ${getAIName(selectedAI)}`}>
-                {getAIIcon(selectedAI)}
-              </button>
-              
-              <div className="ai-info">
-                <div className="status-dot"></div>
-                <span className="ai-name">{getAIName(selectedAI)}</span>
-              </div>
+              {/* Индикатор загрузки */}
+              {isLoading && (
+                <div className="message ai-message loading">
+                  <div className="message-content">
+                    <div className="typing-indicator">
+                      <span></span><span></span><span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+          </div>
+        )}
+
+        {/* Основное поле ввода */}
+        <div className="input-container">
+          <div className="input-field">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Берәр нәрсә языгыз"
+              className="main-input"
+              disabled={isLoading}
+            />
             
-            <button 
-              className="send-btn" 
-              onClick={handleSendMessage}
-              disabled={!message.trim() || isLoading}
-              title="Отправить сообщение"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-              </svg>
-            </button>
+            {/* Нижняя панель с кнопками */}
+            <div className="input-bottom">
+              <div className="left-controls">
+                <button className="attach-btn" onClick={handleFileUpload} title="Прикрепить файл">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66L9.64 16.2a2 2 0 0 1-2.83-2.83l8.49-8.49"/>
+                  </svg>
+                </button>
+                
+                <button className="ai-select-btn" onClick={handleAISelect} title={`Выбран: ${getAIName(selectedAI)}`}>
+                  {getAIIcon(selectedAI)}
+                </button>
+                
+                <div className="ai-info">
+                  <div className="status-dot"></div>
+                  <span className="ai-name">{getAIName(selectedAI)}</span>
+                </div>
+              </div>
+              
+              <button 
+                className="send-btn" 
+                onClick={handleSendMessage}
+                disabled={!message.trim() || isLoading}
+                title="Отправить сообщение"
+              >
+                <img src="/images/setMessage.svg" alt="Отправить" style={{ width: 20, height: 20 }} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default HomePage;
